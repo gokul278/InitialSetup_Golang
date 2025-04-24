@@ -1,0 +1,97 @@
+package accesstoken
+
+import (
+	"fmt"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
+)
+
+// CreateToken generates a JWT token for a given user ID and expiration duration.
+func CreateToken(id any, exp time.Duration) string {
+	jwtKey := []byte(os.Getenv("ACCESS_TOKEN"))
+
+	claims := jwt.MapClaims{
+		"id":  id,
+		"exp": time.Now().Add(exp).Unix(), // expires after 'exp' duration
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(jwtKey)
+	if err != nil {
+		fmt.Println("Error creating token:", err)
+		return "Invalid Token"
+	}
+
+	return tokenString
+}
+
+// ValidateJWT validates the JWT token and checks if it is expired.
+func ValidateJWT(tokenString string) (*jwt.Token, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method")
+		}
+		return []byte(os.Getenv("ACCESS_TOKEN")), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		expFloat, ok := claims["exp"].(float64)
+		if !ok {
+			return nil, fmt.Errorf("invalid exp type")
+		}
+
+		expTime := time.Unix(int64(expFloat), 0)
+		if time.Now().After(expTime) {
+			return nil, fmt.Errorf("token expired at %s", expTime.Format(time.RFC3339))
+		}
+
+		fmt.Println("Token valid for user ID:", claims["id"])
+	}
+
+	return token, nil
+}
+
+// JWTMiddleware protects routes by validating JWT tokens from the Authorization header.
+func JWTMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Authorization")
+		if tokenString == "" {
+			c.JSON(401, gin.H{"error": "Missing token"})
+			c.Abort()
+			return
+		}
+
+		// Remove "Bearer " prefix if present
+		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+		// Validate the JWT token
+		token, err := ValidateJWT(tokenString)
+		if err != nil {
+			if strings.Contains(err.Error(), "token expired") {
+				c.JSON(401, gin.H{"error": "Token expired"})
+				c.Abort()
+				return
+			}
+			c.JSON(401, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		// Extract the claims (user info) and set it in the context
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			// Set the claims in the context
+			c.Set("id", claims["id"])
+		}
+
+		// Proceed to the next handler if the token is valid
+		c.Next()
+	}
+}
