@@ -4,6 +4,7 @@ import (
 	service "AuthenticationService/Service"
 	db "AuthenticationService/internal/DB"
 	accesstoken "AuthenticationService/internal/Helper/AccessToken"
+	hashapi "AuthenticationService/internal/Helper/HashAPI"
 	model "AuthenticationService/internal/Model"
 	"net/http"
 	"time"
@@ -59,12 +60,18 @@ func GetSignupController() gin.HandlerFunc {
 
 		getData := service.GetSignupService(dbConn)
 
-		c.JSON(http.StatusOK, gin.H{
+		token := accesstoken.CreateToken(id, 20*time.Minute)
+
+		payload := map[string]interface{}{
 			"id":      id,
 			"status":  true,
 			"message": "Successfully Data Fetched",
 			"data":    getData,
-			"token":   accesstoken.CreateToken(id, 20*time.Minute),
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"data":  hashapi.Encrypt(payload, false, token),
+			"token": token,
 		})
 	}
 }

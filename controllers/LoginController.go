@@ -3,6 +3,7 @@ package controllers
 import (
 	service "AuthenticationService/Service"
 	db "AuthenticationService/internal/DB"
+	logger "AuthenticationService/internal/Helper/Logger"
 	model "AuthenticationService/internal/Model"
 	"net/http"
 
@@ -36,6 +37,10 @@ func PostLoginController() gin.HandlerFunc {
 		if resVal.Token != "" {
 			response["token"] = resVal.Token
 		}
+
+		log := logger.InitLogger()
+
+		log.Info(reqVal.Username + " loggend in")
 
 		c.JSON(http.StatusOK, response)
 	}
