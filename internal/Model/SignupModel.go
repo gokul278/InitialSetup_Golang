@@ -21,7 +21,6 @@ type UserdataRes struct {
 	UpdatedBy string    `json:"updated_by"`
 }
 
-
 type PostSignupNew struct {
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`

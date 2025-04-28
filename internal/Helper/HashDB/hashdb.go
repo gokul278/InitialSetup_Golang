@@ -7,11 +7,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"os"
 )
 
 // Encrypt encrypts a plain text string using AES-GCM and returns a base64-encoded ciphertext.
-func Encrypt(plainText string, key string) string {
-	keyBytes := []byte(key)
+func Encrypt(plainText string) string {
+	keyBytes := []byte(os.Getenv("ENCRYPT_DB"))
 
 	// Validate key size: AES supports only 16, 24, or 32 byte keys.
 	if len(keyBytes) != 16 && len(keyBytes) != 24 && len(keyBytes) != 32 {

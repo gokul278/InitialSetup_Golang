@@ -45,3 +45,35 @@ func PostLoginController() gin.HandlerFunc {
 		c.JSON(http.StatusOK, response)
 	}
 }
+
+func LoginController() gin.HandlerFunc {
+
+	return func(c *gin.Context) {
+
+		var reqVal model.LoginReq
+
+		if err := c.BindJSON(&reqVal); err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"status":  false,
+				"message": "Something went wrong, Try Again " + err.Error(),
+			})
+			return
+		}
+
+		dbConn, sqlDB := db.InitDB()
+		defer sqlDB.Close()
+
+		resVal := service.LoginServices(dbConn, reqVal)
+
+		response := gin.H{
+			"status":  resVal.Status,
+			"message": resVal.Message,
+		}
+
+		if resVal.Status {
+			response["token"] = resVal.Token
+		}
+
+		c.JSON(http.StatusOK, response)
+	}
+}

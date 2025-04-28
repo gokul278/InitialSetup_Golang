@@ -11,12 +11,14 @@ import (
 )
 
 // CreateToken generates a JWT token for a given user ID and expiration duration.
-func CreateToken(id any, exp time.Duration) string {
+func CreateToken(id any, roleId any, branchid any, exp time.Duration) string {
 	jwtKey := []byte(os.Getenv("ACCESS_TOKEN"))
 
 	claims := jwt.MapClaims{
-		"id":  id,
-		"exp": time.Now().Add(exp).Unix(), // expires after 'exp' duration
+		"id":       id,
+		"roleId":   roleId,
+		"branchId": branchid,
+		"exp":      time.Now().Add(exp).Unix(), // expires after 'exp' duration
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -89,6 +91,8 @@ func JWTMiddleware() gin.HandlerFunc {
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			// Set the claims in the context
 			c.Set("id", claims["id"])
+			c.Set("roleId", claims["roleId"])
+			c.Set("branchId", claims["branchId"])
 		}
 
 		// Proceed to the next handler if the token is valid

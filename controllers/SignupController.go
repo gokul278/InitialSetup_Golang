@@ -3,11 +3,9 @@ package controllers
 import (
 	service "AuthenticationService/Service"
 	db "AuthenticationService/internal/DB"
-	accesstoken "AuthenticationService/internal/Helper/AccessToken"
 	hashapi "AuthenticationService/internal/Helper/HashAPI"
 	model "AuthenticationService/internal/Model"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -60,7 +58,8 @@ func GetSignupController() gin.HandlerFunc {
 
 		getData := service.GetSignupService(dbConn)
 
-		token := accesstoken.CreateToken(id, 20*time.Minute)
+		// token := accesstoken.CreateToken(id, 20*time.Minute)
+		token := ""
 
 		payload := map[string]interface{}{
 			"id":      id,

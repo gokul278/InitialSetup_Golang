@@ -4,18 +4,14 @@ import (
 	hashdb "AuthenticationService/internal/Helper/HashDB"
 	model "AuthenticationService/internal/Model"
 	"fmt"
-	"os"
 
 	"gorm.io/gorm"
 )
 
 func PostSignupService(db *gorm.DB, reqVal model.PostSignupNew) bool {
-
-	dbkey := os.Getenv("ENCRYPT_DB")
-
 	user := model.Userdata{
 		Username:  reqVal.Email,
-		Password:  hashdb.Encrypt(reqVal.Password, dbkey),
+		Password:  hashdb.Encrypt(reqVal.Password),
 		CreatedBy: "Admin",
 	}
 

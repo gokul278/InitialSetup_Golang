@@ -8,5 +8,5 @@ import (
 
 func InitLoginRoutes(router *gin.Engine) {
 	route := router.Group("/v1/login")
-	route.POST("/", controllers.PostLoginController())
+	route.POST("/", controllers.LoginController())
 }
